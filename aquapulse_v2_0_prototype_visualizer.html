@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaPulse - Prototipo Interactivo de Sistema Inteligente de Monitoreo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .pulse-animation {
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-teal-500 to-cyan-500 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid me-1 fa-water-waves text-xl"></i>
+                    <i class="fa-solid fa-wave-square text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">AquaPulse</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Prototipo v2.0 • Monitoreo Inteligente de Agua</p>
+                </div>
+            </div>
+
+            <!-- Tab Switchers & Actions -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <button onclick="switchMainTab('app')" id="tab-btn-app" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm">
+                        <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> App Móvil v2
+                    </button>
+                    <button onclick="switchMainTab('hardware')" id="tab-btn-hardware" class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all">
+                        <i class="fa-solid fa-microchip mr-1.5"></i> Sensor Solar (Hardware)
+                    </button>
+                    <button onclick="switchMainTab('docs')" id="tab-btn-docs" class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all">
+                        <i class="fa-solid fa-clipboard-check mr-1.5"></i> Feedback & v2
+                    </button>
+                </div>
+
+                <!-- Dark Mode Toggle Button -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" title="Cambiar tema">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400 text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Tabs (visible only on small screens) -->
+        <div class="sm:hidden flex border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <button onclick="switchMainTab('app')" id="mob-btn-app" class="flex-1 py-2 text-xs font-semibold text-teal-600 dark:text-teal-400 border-b-2 border-teal-500">App</button>
+            <button onclick="switchMainTab('hardware')" id="mob-btn-hardware" class="flex-1 py-2 text-xs font-semibold text-slate-500 border-b-2 border-transparent">Sensor</button>
+            <button onclick="switchMainTab('docs')" id="mob-btn-docs" class="flex-1 py-2 text-xs font-semibold text-slate-500 border-b-2 border-transparent">Evaluación</button>
+        </div>
+    </header>
+
+    <!-- Main Container Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- SECTION 1: MOBILE APP PROTOTYPE -->
+        <section id="section-app" class="block">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Panel: Context & Instructions -->
+                <div class="lg:col-span-4 space-y-5">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 mb-3">
+                            <i class="fa-solid fa-circle-dot mr-1.5 text-teal-500"></i> Prototipo v2.0 Interactivo
+                        </span>
+                        <h2 class="text-xl font-bold mb-2">Simulador de Aplicación Móvil</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                            Explora las mejoras de la <strong>Versión II de AquaPulse</strong>: recomendaciones claras según el semáforo, reporte ciudadano exprés y alertas inmediatas.
+                        </p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
+                            <strong>Nota ilustrativa:</strong> Los nombres de cuerpos de agua mostrados en el mapa y las alertas son ejemplos ficticios creados para simular el funcionamiento del prototipo.
+                        </p>
+                        
+                        <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4 text-xs">
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-hand-pointer text-teal-500 mt-0.5"></i>
+                                <span><strong>Pines de Sensores:</strong> Haz clic en los pines Verde, Amarillo o Rojo para ver métricas y qué hacer en cada caso.</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-bell text-rose-500 mt-0.5"></i>
+                                <span><strong>Simulación de Alertas:</strong> El pin rojo (Presa Cumbres) dispara la alerta crítica y muestra medidas preventivas.</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-bolt text-cyan-500 mt-0.5"></i>
+                                <span><strong>Reporte Exprés:</strong> Entra a "Reportar" para elegir zona y anomalía en dos toques.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Overview Summary Box -->
+                    <div id="sensor-summary-card" class="bg-gradient-to-br from-slate-900 to-teal-950 text-white p-5 rounded-2xl shadow-lg border border-teal-800/40">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-teal-300 font-semibold">Nodo Seleccionado</span>
+                            <span id="summary-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Excelente</span>
+                        </div>
+                        <h3 id="summary-title" class="text-lg font-bold">Estación #1: Río La Silla (Ejemplo)</h3>
+                        <p id="summary-desc" class="text-xs text-slate-300 mt-1 mb-3">Ubicación de ejemplo en orilla sur. Datos actualizados hace 2 min vía red solar.</p>
+                        <div class="bg-white/10 p-2.5 rounded-xl text-xs mb-4 border border-white/10">
+                            <span class="text-teal-300 font-semibold block mb-0.5">Qué hacer en esta zona:</span>
+                            <span id="summary-action" class="text-slate-100">Condiciones estables. Se puede realizar monitoreo comunitario habitual y evitar arrojar residuos.</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm">
+                                <span class="text-slate-400 block">Potencial de Hidrógeno</span>
+                                <span id="summary-ph" class="text-base font-bold text-teal-300">7.2 pH</span>
+                            </div>
+                            <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm">
+                                <span class="text-slate-400 block">Turbidez</span>
+                                <span id="summary-turb" class="text-base font-bold text-teal-300">4.1 NTU</span>
+                            </div>
+                            <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm">
+                                <span class="text-slate-400 block">Oxígeno Disuelto</span>
+                                <span id="summary-do" class="text-base font-bold text-teal-300">8.5 mg/L</span>
+                            </div>
+                            <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm">
+                                <span class="text-slate-400 block">Temperatura</span>
+                                <span id="summary-temp" class="text-base font-bold text-teal-300">21.4 °C</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Smartphone Shell Component -->
+                <div class="lg:col-span-8 flex justify-center">
+                    <!-- Phone frame styling -->
+                    <div class="w-full max-w-[380px] h-[740px] bg-slate-900 rounded-[48px] p-4 shadow-2xl border-4 border-slate-800 relative ring-1 ring-slate-700/50 flex flex-col">
+                        
+                        <!-- Top Phone Speaker Notch -->
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-6 bg-slate-900 rounded-b-2xl z-30 flex items-center justify-center">
+                            <div class="w-12 h-1 bg-slate-700 rounded-full"></div>
+                            <div class="w-2.5 h-2.5 bg-slate-800 rounded-full ml-3 border border-slate-700"></div>
+                        </div>
+
+                        <!-- Inner Phone Screen Area -->
+                        <div class="w-full h-full bg-slate-50 dark:bg-slate-900 rounded-[36px] overflow-hidden flex flex-col relative border border-slate-700/30">
+                            
+                            <!-- Phone Status Bar -->
+                            <div class="pt-2 px-6 pb-1 flex justify-between items-center text-[10px] font-semibold text-slate-700 dark:text-slate-300 z-20 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm">
+                                <span>9:41</span>
+                                <div class="flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-signal"></i>
+                                    <i class="fa-solid fa-wifi"></i>
+                                    <i class="fa-solid fa-battery-full text-xs"></i>
+                                </div>
+                            </div>
+
+                            <!-- Screen Header -->
+                            <div class="px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between z-20">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-7 h-7 rounded-lg bg-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                        <i class="fa-solid fa-droplet"></i>
+                                    </div>
+                                    <span class="font-bold text-sm tracking-tight">AquaPulse</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="triggerAlertDemo()" class="text-xs px-2 py-1 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-semibold rounded-lg border border-rose-300 dark:border-rose-800 animate-pulse">
+                                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Probar Alerta
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SCREEN TAB 1: MAP & DASHBOARD -->
+                            <div id="app-screen-map" class="flex-1 flex flex-col relative overflow-hidden">
+                                
+                                <!-- Mock Interactive Map Area -->
+                                <div class="relative w-full h-64 bg-slate-200 dark:bg-slate-800 overflow-hidden border-b border-slate-200 dark:border-slate-800">
+                                    <!-- Stylized SVG Map Graphics -->
+                                    <svg class="w-full h-full object-cover opacity-80" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="400" height="300" fill="#e2e8f0" class="dark:fill-slate-800"/>
+                                        <!-- River & Water Bodies -->
+                                        <path d="M-10 120 C 100 140, 150 60, 280 100 C 350 120, 380 200, 420 220" stroke="#38bdf8" stroke-width="28" stroke-linecap="round" fill="none" opacity="0.6"/>
+                                        <circle cx="280" cy="220" r="45" fill="#38bdf8" opacity="0.5"/>
+                                        <!-- Terrain lines -->
+                                        <path d="M 0 50 Q 100 20 200 60 T 400 30" stroke="#cbd5e1" stroke-width="2" fill="none" class="dark:stroke-slate-700"/>
+                                        <path d="M 0 240 Q 150 200 300 260 T 400 220" stroke="#cbd5e1" stroke-width="2" fill="none" class="dark:stroke-slate-700"/>
+                                    </svg>
+
+                                    <!-- Map Search / Filter Bar -->
+                                    <div class="absolute top-3 left-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md flex items-center justify-between text-xs border border-slate-200 dark:border-slate-700">
+                                        <span class="text-slate-500 font-medium"><i class="fa-solid fa-location-dot text-teal-500 mr-1.5"></i> Monterrey, NL</span>
+                                        <span class="bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-semibold px-2 py-0.5 rounded-full text-[10px]">3 Sensores</span>
+                                    </div>
+
+                                    <!-- MAP PIN 1: RIO LA SILLA (GREEN) -->
+                                    <button onclick="selectSensor(1)" id="pin-1" class="absolute top-20 left-16 group focus:outline-none">
+                                        <div class="relative flex items-center justify-center">
+                                            <span class="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900 font-bold text-xs group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-check"></i>
+                                            </span>
+                                            <span class="absolute -bottom-5 bg-slate-900/90 text-white text-[9px] font-medium px-1.5 py-0.5 rounded shadow whitespace-nowrap">Río La Silla</span>
+                                        </div>
+                                    </button>
+
+                                    <!-- MAP PIN 2: ARROYO SECO (YELLOW) -->
+                                    <button onclick="selectSensor(2)" id="pin-2" class="absolute top-28 left-48 group focus:outline-none">
+                                        <div class="relative flex items-center justify-center">
+                                            <span class="w-7 h-7 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900 font-bold text-xs group-hover:scale-110 transition-transform">
+                                                !
+                                            </span>
+                                            <span class="absolute -bottom-5 bg-slate-900/90 text-white text-[9px] font-medium px-1.5 py-0.5 rounded shadow whitespace-nowrap">Arroyo Seco</span>
+                                        </div>
+                                    </button>
+
+                                    <!-- MAP PIN 3: PRESA CUMBRES (RED - POLLUTED) -->
+                                    <button onclick="selectSensor(3)" id="pin-3" class="absolute top-44 right-16 group focus:outline-none">
+                                        <div class="relative flex items-center justify-center">
+                                            <span class="w-8 h-8 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900 font-bold text-xs pulse-animation group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-skull-crossbones"></i>
+                                            </span>
+                                            <span class="absolute -bottom-5 bg-rose-950 text-rose-200 text-[9px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap border border-rose-700">Presa Cumbres</span>
+                                        </div>
+                                    </button>
+
+                                    <!-- Map Legend -->
+                                    <div class="absolute bottom-2 left-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1.5 rounded-lg text-[9px] flex space-x-2 border border-slate-200 dark:border-slate-800">
+                                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span> Normal</span>
+                                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-1"></span> Alerta</span>
+                                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-rose-600 mr-1"></span> Crítico</span>
+                                    </div>
+                                </div>
+
+                                <!-- Sensor Metrics Details Scrollable Panel -->
+                                <div class="flex-1 p-3 overflow-y-auto custom-scroll space-y-3 bg-slate-50 dark:bg-slate-900">
+                                    
+                                    <!-- Selected Node Header in App -->
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <h4 id="app-sensor-title" class="font-bold text-sm text-slate-800 dark:text-slate-100">Estación #1: Río La Silla</h4>
+                                            <p id="app-sensor-sub" class="text-[10px] text-slate-500 dark:text-slate-400">Estado: Óptimo • Actualizado hace 2 min</p>
+                                        </div>
+                                        <span id="app-sensor-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                            Limpia
+                                        </span>
+                                    </div>
+
+                                    <!-- Actionable Recommendation Box inside App -->
+                                    <div id="app-action-box" class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 p-2.5 rounded-xl text-[10px] text-emerald-900 dark:text-emerald-200">
+                                        <div class="font-bold mb-0.5 flex items-center">
+                                            <i class="fa-solid fa-circle-info mr-1.5 text-emerald-600 dark:text-emerald-400"></i>
+                                            <span>Significado y acción recomendada:</span>
+                                        </div>
+                                        <p id="app-action-text">Los valores están dentro de parámetros saludables. Mantén el cuidado del entorno y reporta si notas cambios visuales.</p>
+                                    </div>
+
+                                    <!-- Metrics Grid Cards -->
+                                    <div class="grid grid-cols-2 gap-2">
+                                        
+                                        <!-- pH Card -->
+                                        <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[10px] mb-1">
+                                                <span>Potencial pH</span>
+                                                <i class="fa-solid fa-flask text-teal-500"></i>
+                                            </div>
+                                            <div id="val-ph" class="text-base font-bold text-slate-800 dark:text-slate-100">7.2</div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                                <div id="bar-ph" class="bg-teal-500 h-full rounded-full" style="width: 72%;"></div>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 mt-1 block">Rango ideal: 6.5 - 8.5</span>
+                                        </div>
+
+                                        <!-- Turbidity Card -->
+                                        <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[10px] mb-1">
+                                                <span>Turbidez</span>
+                                                <i class="fa-solid fa-[#0d9488] fa-eye-low text-cyan-500"></i>
+                                            </div>
+                                            <div id="val-turb" class="text-base font-bold text-slate-800 dark:text-slate-100">4.1 NTU</div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                                <div id="bar-turb" class="bg-cyan-500 h-full rounded-full" style="width: 25%;"></div>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 mt-1 block">Aceptable: &lt; 5.0 NTU</span>
+                                        </div>
+
+                                        <!-- Dissolved Oxygen Card -->
+                                        <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[10px] mb-1">
+                                                <span>Oxígeno (DO)</span>
+                                                <i class="fa-solid fa-wind text-blue-500"></i>
+                                            </div>
+                                            <div id="val-do" class="text-base font-bold text-slate-800 dark:text-slate-100">8.5 mg/L</div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                                <div id="bar-do" class="bg-blue-500 h-full rounded-full" style="width: 85%;"></div>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 mt-1 block">Sostenible: &gt; 6.0 mg/L</span>
+                                        </div>
+
+                                        <!-- Temperature Card -->
+                                        <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[10px] mb-1">
+                                                <span>Temperatura</span>
+                                                <i class="fa-solid fa-temperature-half text-amber-500"></i>
+                                            </div>
+                                            <div id="val-temp" class="text-base font-bold text-slate-800 dark:text-slate-100">21.4 °C</div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                                <div id="bar-temp" class="bg-amber-500 h-full rounded-full" style="width: 45%;"></div>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 mt-1 block">Normal ambiental</span>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Quick Community Action Box -->
+                                    <div id="polluted-warning-banner" class="hidden bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 p-2.5 rounded-xl text-[11px] text-rose-800 dark:text-rose-200">
+                                        <div class="flex items-start space-x-2">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm mt-0.5"></i>
+                                            <div>
+                                                <strong class="font-bold">¡Peligro Sanitario Detectado!</strong>
+                                                <p class="text-[10px] text-rose-700 dark:text-rose-300 mt-0.5">Se ha notificado automáticamente a Protección Civil y Servicios de Agua.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SCREEN TAB 2: CITIZEN REPORT FORM -->
+                            <div id="app-screen-report" class="hidden flex-1 p-4 overflow-y-auto custom-scroll bg-slate-50 dark:bg-slate-900 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Reporte Ciudadano Exprés</h3>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Toca la zona y el tipo de anomalía en segundos.</p>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">v2.0 Rápido</span>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3 shadow-sm">
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">1. Elige la zona (ejemplo)</label>
+                                        <div id="express-zone-group" class="grid grid-cols-2 gap-1.5 text-[10px]">
+                                            <button type="button" onclick="selectExpressZone(this, 'Presa Cumbres (Ejemplo)')" class="express-zone-btn p-2 rounded-lg border border-teal-500 bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 font-semibold text-left">
+                                                <i class="fa-solid fa-location-dot mr-1"></i> Presa Cumbres
+                                            </button>
+                                            <button type="button" onclick="selectExpressZone(this, 'Río La Silla (Ejemplo)')" class="express-zone-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left">
+                                                <i class="fa-solid fa-location-dot mr-1"></i> Río La Silla
+                                            </button>
+                                            <button type="button" onclick="selectExpressZone(this, 'Arroyo Seco (Ejemplo)')" class="express-zone-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left">
+                                                <i class="fa-solid fa-location-dot mr-1"></i> Arroyo Seco
+                                            </button>
+                                            <button type="button" onclick="selectExpressZone(this, 'Canal Comunitario (Ejemplo)')" class="express-zone-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left">
+                                                <i class="fa-solid fa-location-dot mr-1"></i> Otro punto
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="selected-express-zone" value="Presa Cumbres (Ejemplo)">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">2. Tipo de anomalía visual</label>
+                                        <div id="express-anomaly-group" class="grid grid-cols-2 gap-1.5 text-[10px]">
+                                            <button type="button" onclick="selectExpressAnomaly(this, 'Espuma o cambio de color')" class="express-anomaly-btn p-2 border border-teal-500 bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 font-semibold rounded-lg text-left">
+                                                <i class="fa-solid fa-palette mr-1"></i> Espuma / Color
+                                            </button>
+                                            <button type="button" onclick="selectExpressAnomaly(this, 'Olor inusual')" class="express-anomaly-btn p-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-left">
+                                                <i class="fa-solid fa-wind mr-1"></i> Olor inusual
+                                            </button>
+                                            <button type="button" onclick="selectExpressAnomaly(this, 'Acumulación de basura')" class="express-anomaly-btn p-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-left">
+                                                <i class="fa-solid fa-trash mr-1"></i> Basura acumulada
+                                            </button>
+                                            <button type="button" onclick="selectExpressAnomaly(this, 'Posible descarga química')" class="express-anomaly-btn p-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-left">
+                                                <i class="fa-solid fa-flask mr-1"></i> Descarga / Químicos
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="selected-express-anomaly" value="Espuma o cambio de color">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Nota opcional</label>
+                                        <textarea id="express-note-input" rows="2" placeholder="Detalle rápido (opcional)..." class="w-full text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100"></textarea>
+                                    </div>
+
+                                    <button onclick="submitReportMock()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-lg shadow transition-all">
+                                        <i class="fa-solid fa-paper-plane mr-1"></i> Enviar Reporte Exprés
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SCREEN TAB 3: COMMUNITY ALERTS FEED -->
+                            <div id="app-screen-feed" class="hidden flex-1 p-3 overflow-y-auto custom-scroll bg-slate-50 dark:bg-slate-900 space-y-2.5">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Bitácora Comunitaria</h3>
+                                    <span class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">2 Alertas Activas</span>
+                                </div>
+
+                                <!-- Alert Card 1 -->
+                                <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-700 shadow-sm text-xs space-y-1">
+                                    <div class="flex justify-between font-bold text-rose-600 dark:text-rose-400 text-[11px]">
+                                        <span><i class="fa-solid fa-circle-exclamation mr-1"></i> Presa Cumbres</span>
+                                        <span class="text-slate-400 text-[9px]">Hace 15 min</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-300">Descarga irregular detectada. Oxígeno disuelto cayó a 2.1 mg/L. Evite pesca y natación.</p>
+                                    <div class="text-[9px] text-slate-400 flex justify-between pt-1 border-t border-slate-100 dark:border-slate-700">
+                                        <span>Verificado por Sensor #3</span>
+                                        <span class="text-teal-600 dark:text-teal-400">14 Confirmaciones</span>
+                                    </div>
+                                </div>
+
+                                <!-- Alert Card 2 -->
+                                <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 dark:border-slate-700 shadow-sm text-xs space-y-1">
+                                    <div class="flex justify-between font-bold text-amber-600 dark:text-amber-400 text-[11px]">
+                                        <span><i class="fa-solid fa-triangle-exclamation mr-1"></i> Arroyo Seco</span>
+                                        <span class="text-slate-400 text-[9px]">Hace 2 horas</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-300">Ligero incremento de turbidez (14.2 NTU) por lluvias recientes. Monitoreo activo.</p>
+                                    <div class="text-[9px] text-slate-400 flex justify-between pt-1 border-t border-slate-100 dark:border-slate-700">
+                                        <span>Verificado por Sensor #2</span>
+                                        <span>5 Confirmaciones</span>
+                                    </div>
+                                </div>
+
+                                <!-- Success Citizen Post -->
+                                <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 dark:border-slate-700 shadow-sm text-xs space-y-1">
+                                    <div class="flex justify-between font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                                        <span><i class="fa-solid fa-circle-check mr-1"></i> Río La Silla</span>
+                                        <span class="text-slate-400 text-[9px]">Ayer</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-300">Jornada de limpieza comunitaria finalizada con éxito. Calidad de agua restablecida.</p>
+                                </div>
+                            </div>
+
+                            <!-- Mobile App Bottom Navigation Bar -->
+                            <div class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-1.5 grid grid-cols-3 text-center z-20">
+                                <button onclick="switchAppTab('map')" id="app-nav-map" class="py-1 text-teal-600 dark:text-teal-400 flex flex-col items-center">
+                                    <i class="fa-solid fa-map-location-dot text-sm"></i>
+                                    <span class="text-[9px] font-medium mt-0.5">Monitoreo</span>
+                                </button>
+                                <button onclick="switchAppTab('report')" id="app-nav-report" class="py-1 text-slate-400 hover:text-slate-600 flex flex-col items-center">
+                                    <i class="fa-solid fa-circle-plus text-sm"></i>
+                                    <span class="text-[9px] font-medium mt-0.5">Reportar</span>
+                                </button>
+                                <button onclick="switchAppTab('feed')" id="app-nav-feed" class="py-1 text-slate-400 hover:text-slate-600 flex flex-col items-center">
+                                    <i class="fa-solid fa-bell text-sm"></i>
+                                    <span class="text-[9px] font-medium mt-0.5">Alertas</span>
+                                </button>
+                            </div>
+
+                            <!-- PUSH NOTIFICATION SIMULATION MODAL -->
+                            <div id="push-notification-modal" class="hidden absolute top-8 left-3 right-3 bg-slate-950/95 text-white p-3.5 rounded-2xl shadow-2xl border border-rose-500/50 backdrop-blur-md z-50 animate-bounce">
+                                <div class="flex items-start space-x-3">
+                                    <div class="p-2 bg-rose-600 text-white rounded-xl">
+                                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[10px] font-bold text-rose-400 uppercase">ALERTA CRÍTICA • AquaPulse</span>
+                                            <button onclick="dismissNotification()" class="text-slate-400 text-xs hover:text-white">&times;</button>
+                                        </div>
+                                        <h5 class="text-xs font-bold text-white mt-0.5">Contaminación en Presa Cumbres</h5>
+                                        <p class="text-[10px] text-slate-300 mt-1">
+                                            Sensor #3 detectó caída crítica de Oxígeno (2.1 mg/L) y alto pH (9.5). Se recomienda NO consumir ni entrar en contacto.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: HARDWARE BLUEPRINT & SENSOR DIAGRAM -->
+        <section id="section-hardware" class="hidden">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="max-w-3xl mb-6">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 mb-2">
+                        <i class="fa-solid fa-solar-panel mr-1.5"></i> Prototipo de Hardware Sustentable
+                    </span>
+                    <h2 class="text-2xl font-bold">Estación Flotante Monitoreada Solar</h2>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        Diseño conceptual técnico del sensor autónomo diseñado para instalarse en ríos, presas y arroyos sin requerir cableado eléctrico tradicional.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <!-- SVG Interactive Blueprint Diagram -->
+                    <div class="lg:col-span-7 bg-slate-950 p-6 rounded-2xl border border-slate-800 flex justify-center items-center relative overflow-hidden">
+                        
+                        <!-- SVG Technical Diagram -->
+                        <svg class="w-full max-w-md h-auto" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background Grid Lines -->
+                            <defs>
+                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+                                </pattern>
+                            </defs>
+                            <rect width="400" height="500" fill="url(#grid)" />
+
+                            <!-- Water Line -->
+                            <path d="M 0 260 Q 100 250, 200 265 T 400 255 L 400 500 L 0 500 Z" fill="#0284c7" opacity="0.25"/>
+                            <path d="M 0 260 Q 100 250, 200 265 T 400 255" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4"/>
+
+                            <!-- Component 1: Antenna & Telemetry -->
+                            <g class="cursor-pointer group" onclick="highlightPart('antenna')">
+                                <line x1="200" y1="90" x2="200" y2="40" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                                <circle cx="200" cy="35" r="6" fill="#38bdf8" class="animate-pulse"/>
+                                <!-- Wireless Waves -->
+                                <path d="M 185 25 A 20 20 0 0 1 215 25" stroke="#38bdf8" stroke-width="2" fill="none"/>
+                                <path d="M 175 15 A 32 32 0 0 1 225 15" stroke="#38bdf8" stroke-width="1.5" fill="none"/>
+                            </g>
+
+                            <!-- Component 2: Solar Panel Dome -->
+                            <g class="cursor-pointer" onclick="highlightPart('solar')">
+                                <path d="M 130 130 L 270 130 L 250 90 L 150 90 Z" fill="#0f766e" stroke="#14b8a6" stroke-width="2"/>
+                                <!-- Solar Panel Grid Lines -->
+                                <line x1="160" y1="90" x2="150" y2="130" stroke="#2dd4bf" stroke-width="1"/>
+                                <line x1="200" y1="90" x2="200" y2="130" stroke="#2dd4bf" stroke-width="1"/>
+                                <line x1="240" y1="90" x2="250" y2="130" stroke="#2dd4bf" stroke-width="1"/>
+                            </g>
+
+                            <!-- Component 3: Buoyant Hermetic Body -->
+                            <g class="cursor-pointer" onclick="highlightPart('body')">
+                                <rect x="120" y="130" width="160" height="110" rx="15" fill="#1e293b" stroke="#64748b" stroke-width="3"/>
+                                <!-- Internal Microcontroller Mockup -->
+                                <rect x="150" y="150" width="100" height="50" rx="6" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5"/>
+                                <circle cx="170" cy="175" r="4" fill="#10b981"/>
+                                <circle cx="185" cy="175" r="4" fill="#f59e0b"/>
+                                <circle cx="200" cy="175" r="4" fill="#06b6d4"/>
+                                <text x="160" y="215" font-family="sans-serif" font-size="9" fill="#94a3b8">Batería Litio + LoRa</text>
+                            </g>
+
+                            <!-- Component 4: Submerged Multi-Probe Sensors -->
+                            <g class="cursor-pointer" onclick="highlightPart('sensors')">
+                                <!-- Stainless steel Shaft -->
+                                <rect x="190" y="240" width="20" height="130" fill="#475569"/>
+                                <!-- Lower Sensor Probes -->
+                                <rect x="165" y="370" width="15" height="45" rx="3" fill="#0d9488" stroke="#2dd4bf" stroke-width="1"/>
+                                <rect x="192.5" y="370" width="15" height="55" rx="3" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+                                <rect x="220" y="370" width="15" height="40" rx="3" fill="#6366f1" stroke="#818cf8" stroke-width="1"/>
+                            </g>
+
+                            <!-- Anchoring Cable -->
+                            <line x1="200" y1="425" x2="200" y2="480" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>
+                            <polygon points="190,480 210,480 200,495" fill="#64748b"/>
+
+                            <!-- Interactive Callouts -->
+                            <text x="230" y="40" font-size="10" fill="#38bdf8" font-weight="bold">1. Telemetría 4G / LoRaWAN</text>
+                            <text x="280" y="110" font-size="10" fill="#2dd4bf" font-weight="bold">2. Panel Solar Domiciliario</text>
+                            <text x="290" y="180" font-size="10" fill="#94a3b8" font-weight="bold">3. Cuerpo Estanco IP68</text>
+                            <text x="245" y="390" font-size="10" fill="#818cf8" font-weight="bold">4. Multisonda (pH, DO, Turb.)</text>
+                        </svg>
+                    </div>
+
+                    <!-- Hardware Spec Details -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div id="hw-detail-card" class="bg-slate-50 dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <h3 id="hw-part-title" class="text-lg font-bold text-teal-600 dark:text-teal-400">
+                                <i class="fa-solid fa-microchip mr-2"></i> Especificaciones del Hardware
+                            </h3>
+                            <p id="hw-part-desc" class="text-xs text-slate-600 dark:text-slate-300 mt-2">
+                                Haz clic en los componentes del diagrama técnico para examinar los detalles de construcción de la boya de monitoreo.
+                            </p>
+                        </div>
+
+                        <div class="space-y-2 text-xs">
+                            <div class="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold"><i class="fa-solid fa-battery-full text-emerald-500 mr-2"></i> Autonomía y Respaldo</span>
+                                    <span class="text-slate-500">Solar + Batería LiFePO4</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                    El panel recarga la batería de respaldo durante el día para mantener las lecturas activas de noche o en días nublados (hasta 7 días de autonomía).
+                                </p>
+                            </div>
+                            <div class="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                <span class="font-semibold"><i class="fa-solid fa-shield-halved text-cyan-500 mr-2"></i> Protecciones</span>
+                                <span class="text-slate-500">Norma IP68 / Resistente a la corrosión</span>
+                            </div>
+                            <div class="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                <span class="font-semibold"><i class="fa-solid fa-wifi text-indigo-500 mr-2"></i> Transmisión</span>
+                                <span class="text-slate-500">Red Celular IoT o LoRaWAN de bajo consumo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: EVALUATION & FEEDBACK TOOLS -->
+        <section id="section-docs" class="hidden">
+            <div class="space-y-6">
+                
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h2 class="text-2xl font-bold mb-2">Feedback de la Versión I y Evolución a la Versión II</h2>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">
+                        Comentarios recibidos al evaluar el prototipo inicial y análisis de cómo se integraron en la Versión II de AquaPulse.
+                    </p>
+                </div>
+
+                <!-- 3 Realistic Feedback Comments & Analysis -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-teal-600 dark:text-teal-400">Comentario 1 • Compañero de clase</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">UX y Alertas</span>
+                            </div>
+                            <p class="text-xs italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl mb-3">
+                                "Oye Ale, se ve muy bien el mapa con colores, pero si a alguien le sale en rojo o amarillo, ¿qué se supone que haga? Estaría cool que dijera qué significa y qué precaución tomar."
+                            </p>
+                        </div>
+                        <div class="text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1">Conveniencia en Versión II:</strong>
+                            <p class="text-slate-600 dark:text-slate-400">Añadir recomendaciones accionables por color hace que el dato sea útil para prevenir riesgos y no se quede solo en un número o color.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-cyan-600 dark:text-cyan-400">Comentario 2 • Familiar</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Autonomía Solar</span>
+                            </div>
+                            <p class="text-xs italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl mb-3">
+                                "Me gusta mucho la idea del panel solar, mija, pero ¿qué pasa cuando está nublado varios días o de noche? Explica bien cómo sigue jalando para que se vea confiable."
+                            </p>
+                        </div>
+                        <div class="text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1">Conveniencia en Versión II:</strong>
+                            <p class="text-slate-600 dark:text-slate-400">Detallar el respaldo de batería y la autonomía ante baja radiación solar fortalece la credibilidad técnica y práctica del hardware.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Comentario 3 • Profesora</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Participación</span>
+                            </div>
+                            <p class="text-xs italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl mb-3">
+                                "La propuesta tiene buen enfoque comunitario; para fortalecer la experiencia de uso, conviene que el reporte ciudadano sea rápido e intuitivo en el momento de observar una anomalía."
+                            </p>
+                        </div>
+                        <div class="text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
+                            <strong class="text-slate-800 dark:text-slate-100 block mb-1">Conveniencia en Versión II:</strong>
+                            <p class="text-slate-600 dark:text-slate-400">Simplificar el flujo a botones rápidos de zona y anomalía reduce fricción y facilita que los usuarios reporten sin perder tiempo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testing Card & Learning Card Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- TESTING CARD -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-t-4 border-t-teal-500 border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">Testing Card (Tarjeta de Prueba)</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-bold">Paso 1</span>
+                        </div>
+
+                        <div class="space-y-4 text-xs">
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">1. Creemos que (Hipótesis):</strong>
+                                <p class="text-slate-600 dark:text-slate-400">La comunidad y municipios adoptarán el sistema si reciben alertas tempranas en tiempo real en sus celulares antes de que el agua sea peligrosa.</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">2. Para verificarlo, nosotros:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">Pondremos a prueba el prototipo interactivo con 20 residentes locales y 2 autoridades ambientales durante 1 semana.</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">3. Y mediremos:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">El porcentaje de usuarios que comprenden las métricas sin ayuda técnica y la velocidad de respuesta al recibir alertas push ficticias.</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">4. Tendremos razón si:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">Más del 85% de los usuarios encuentra la app fácil de usar y el 90% afirma que estaría dispuesto a instalarla o comprar el servicio para su comunidad.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LEARNING CARD -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-t-4 border-t-cyan-500 border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Learning Card (Tarjeta de Aprendizaje)</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-bold">Paso 2</span>
+                        </div>
+
+                        <div class="space-y-4 text-xs">
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">1. Creíamos que:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">Los usuarios querían ver gráficas de laboratorio muy detalladas y valores químicos complejos en la pantalla principal.</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">2. Observamos que:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">Los ciudadanos prefieren un indicador semáforo intuitivo (Verde/Amarillo/Rojo) e interpretaciones claras como "Agua Limpia" o "No Apta".</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">3. Por lo tanto, aprendimos que:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">La clave del valor del servicio es traducir datos científicos complejos a un lenguaje accesible para la comunidad.</p>
+                            </div>
+
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                                <strong class="block text-slate-700 dark:text-slate-200 mb-1">4. Por lo tanto, nosotros:</strong>
+                                <p class="text-slate-600 dark:text-slate-400">Rediseñamos el prototipo para dar prioridad a la visualización visual del mapa y alertas sencillas, dejando las métricas avanzadas como desplegables opcionales.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FEEDBACK FORM (INTERACTIVE) -->
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-lg font-bold mb-1">Formulario de Retroalimentación de la Comunidad</h3>
+                    <p class="text-xs text-slate-500 mb-4">Cuestionario neutral para evaluar el prototipo sin intenciones de venta directa.</p>
+
+                    <div id="feedback-status-msg" class="hidden mb-4 p-3 rounded-xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-xs text-teal-800 dark:text-teal-200 font-medium"></div>
+
+                    <form onsubmit="handleFeedbackSubmit(event)" class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">¿Qué tan clara te parece la información sobre la calidad del agua?</label>
+                                <select class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                                    <option>Muy clara y fácil de entender</option>
+                                    <option>Moderadamente clara</option>
+                                    <option>Confusa / Demasiado técnica</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">¿Qué función consideras más valiosa?</label>
+                                <select class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                                    <option>Las alertas automáticas al celular</option>
+                                    <option>El mapa visual con semáforo de colores</option>
+                                    <option>La capacidad de hacer reportes ciudadanos</option>
+                                    <option>El funcionamiento sustentable con energía solar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">¿Qué mejorarías de este prototipo antes de una versión de compra?</label>
+                            <textarea rows="2" placeholder="Escribe tus sugerencias de mejora honestas..." class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></textarea>
+                        </div>
+
+                        <button type="submit" class="px-5 py-2 bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-700 text-white font-bold rounded-xl transition-all">
+                            Enviar Retroalimentación
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive Prototype Logic -->
+    <script>
+        // Sensor Data Mockup Database (Illustrative water bodies for v2.0)
+        const sensorData = {
+            1: {
+                title: "Estación #1: Río La Silla (Ejemplo)",
+                status: "Óptimo",
+                badge: "Excelente",
+                badgeClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+                appBadge: "Limpia",
+                appBadgeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+                desc: "Ubicación de ejemplo en orilla sur. Datos actualizados hace 2 min vía red solar.",
+                action: "Condiciones estables. Se puede realizar monitoreo comunitario habitual y evitar arrojar residuos.",
+                appAction: "Los valores están dentro de parámetros saludables. Mantén el cuidado del entorno y reporta si notas cambios visuales.",
+                appActionBoxClass: "bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 p-2.5 rounded-xl text-[10px] text-emerald-900 dark:text-emerald-200",
+                ph: "7.2 pH", phVal: "7.2", phBar: "72%",
+                turb: "4.1 NTU", turbVal: "4.1 NTU", turbBar: "25%",
+                do: "8.5 mg/L", doVal: "8.5 mg/L", doBar: "85%",
+                temp: "21.4 °C", tempVal: "21.4 °C", tempBar: "45%",
+                polluted: false
+            },
+            2: {
+                title: "Estación #2: Arroyo Seco (Ejemplo)",
+                status: "Precaución",
+                badge: "Precaución",
+                badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
+                appBadge: "Alerta",
+                appBadgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+                desc: "Punto de ejemplo en cauce medio. Incremento moderado de turbidez tras lluvias.",
+                action: "Evita el contacto directo prolongado y consulta la evolución de turbidez en las próximas horas.",
+                appAction: "Turbidez ligeramente elevada. No uses esta agua para consumo sin filtración y mantente atento a nuevas alertas.",
+                appActionBoxClass: "bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-2.5 rounded-xl text-[10px] text-amber-900 dark:text-amber-200",
+                ph: "7.9 pH", phVal: "7.9", phBar: "79%",
+                turb: "14.2 NTU", turbVal: "14.2 NTU", turbBar: "62%",
+                do: "6.4 mg/L", doVal: "6.4 mg/L", doBar: "64%",
+                temp: "23.1 °C", tempVal: "23.1 °C", tempBar: "52%",
+                polluted: false
+            },
+            3: {
+                title: "Estación #3: Presa Cumbres (Ejemplo)",
+                status: "Crítico",
+                badge: "Crítico",
+                badgeClass: "bg-rose-500/20 text-rose-300 border border-rose-500/40",
+                appBadge: "Peligro",
+                appBadgeClass: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
+                desc: "Punto crítico de ejemplo. Anomalía química y caída de oxígeno disuelto.",
+                action: "NO entrar en contacto ni consumir agua. Aleja mascotas y reporta de inmediato cualquier descarga visible.",
+                appAction: "¡Alerta crítica! Evita nadar, pescar o tocar el agua en esta zona hasta que autoridades confirmen su saneamiento.",
+                appActionBoxClass: "bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 p-2.5 rounded-xl text-[10px] text-rose-900 dark:text-rose-200",
+                ph: "9.5 pH", phVal: "9.5", phBar: "95%",
+                turb: "38.0 NTU", turbVal: "38.0 NTU", turbBar: "92%",
+                do: "2.1 mg/L", doVal: "2.1 mg/L", doBar: "21%",
+                temp: "26.8 °C", tempVal: "26.8 °C", tempBar: "70%",
+                polluted: true
+            }
+        };
+
+        // Switch main top tabs (App, Hardware, Feedback)
+        function switchMainTab(tab) {
+            const sections = ['app', 'hardware', 'docs'];
+            sections.forEach(s => {
+                const secEl = document.getElementById(`section-${s}`);
+                const deskBtn = document.getElementById(`tab-btn-${s}`);
+                const mobBtn = document.getElementById(`mob-btn-${s}`);
+
+                if (s === tab) {
+                    secEl.classList.remove('hidden');
+                    secEl.classList.add('block');
+                    if (deskBtn) {
+                        deskBtn.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm";
+                    }
+                    if (mobBtn) {
+                        mobBtn.className = "flex-1 py-2 text-xs font-semibold text-teal-600 dark:text-teal-400 border-b-2 border-teal-500";
+                    }
+                } else {
+                    secEl.classList.add('hidden');
+                    secEl.classList.remove('block');
+                    if (deskBtn) {
+                        deskBtn.className = "px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all";
+                    }
+                    if (mobBtn) {
+                        mobBtn.className = "flex-1 py-2 text-xs font-semibold text-slate-500 border-b-2 border-transparent";
+                    }
+                }
+            });
+        }
+
+        // Switch mobile app bottom screens (map, report, feed)
+        function switchAppTab(tab) {
+            const screens = ['map', 'report', 'feed'];
+            screens.forEach(s => {
+                const screenEl = document.getElementById(`app-screen-${s}`);
+                const navEl = document.getElementById(`app-nav-${s}`);
+                if (s === tab) {
+                    screenEl.classList.remove('hidden');
+                    screenEl.classList.add('flex');
+                    navEl.className = "py-1 text-teal-600 dark:text-teal-400 flex flex-col items-center";
+                } else {
+                    screenEl.classList.add('hidden');
+                    screenEl.classList.remove('flex');
+                    navEl.className = "py-1 text-slate-400 hover:text-slate-600 flex flex-col items-center";
+                }
+            });
+        }
+
+        // Select sensor pin on map
+        function selectSensor(id) {
+            const data = sensorData[id];
+            if (!data) return;
+
+            document.getElementById('summary-title').textContent = data.title;
+            document.getElementById('summary-desc').textContent = data.desc;
+            document.getElementById('summary-action').textContent = data.action;
+            const summaryBadge = document.getElementById('summary-badge');
+            summaryBadge.textContent = data.badge;
+            summaryBadge.className = `px-2 py-0.5 rounded-full text-xs font-bold ${data.badgeClass}`;
+
+            document.getElementById('summary-ph').textContent = data.ph;
+            document.getElementById('summary-turb').textContent = data.turb;
+            document.getElementById('summary-do').textContent = data.do;
+            document.getElementById('summary-temp').textContent = data.temp;
+
+            document.getElementById('app-sensor-title').textContent = data.title.replace(' (Ejemplo)', '');
+            document.getElementById('app-sensor-sub').textContent = `Estado: ${data.status} • Actualizado hace 2 min`;
+            const appBadge = document.getElementById('app-sensor-badge');
+            appBadge.textContent = data.appBadge;
+            appBadge.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${data.appBadgeClass}`;
+
+            const actionBox = document.getElementById('app-action-box');
+            actionBox.className = data.appActionBoxClass;
+            document.getElementById('app-action-text').textContent = data.appAction;
+
+            document.getElementById('val-ph').textContent = data.phVal;
+            document.getElementById('bar-ph').style.width = data.phBar;
+            document.getElementById('val-turb').textContent = data.turbVal;
+            document.getElementById('bar-turb').style.width = data.turbBar;
+            document.getElementById('val-do').textContent = data.doVal;
+            document.getElementById('bar-do').style.width = data.doBar;
+            document.getElementById('val-temp').textContent = data.tempVal;
+            document.getElementById('bar-temp').style.width = data.tempBar;
+
+            const warningBanner = document.getElementById('polluted-warning-banner');
+            if (data.polluted) {
+                warningBanner.classList.remove('hidden');
+                triggerAlertDemo();
+            } else {
+                warningBanner.classList.add('hidden');
+            }
+        }
+
+        // Push Notification Modal controls
+        function triggerAlertDemo() {
+            const modal = document.getElementById('push-notification-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function dismissNotification() {
+            const modal = document.getElementById('push-notification-modal');
+            modal.classList.add('hidden');
+        }
+
+        // Express Citizen Report controls
+        function selectExpressZone(btn, zoneName) {
+            document.querySelectorAll('.express-zone-btn').forEach(b => {
+                b.className = "express-zone-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-left";
+            });
+            btn.className = "express-zone-btn p-2 rounded-lg border border-teal-500 bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 font-semibold text-left";
+            document.getElementById('selected-express-zone').value = zoneName;
+        }
+
+        function selectExpressAnomaly(btn, anomalyName) {
+            document.querySelectorAll('.express-anomaly-btn').forEach(b => {
+                b.className = "express-anomaly-btn p-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-left";
+            });
+            btn.className = "express-anomaly-btn p-2 border border-teal-500 bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 font-semibold rounded-lg text-left";
+            document.getElementById('selected-express-anomaly').value = anomalyName;
+        }
+
+        function submitReportMock() {
+            const zone = document.getElementById('selected-express-zone').value;
+            const anomaly = document.getElementById('selected-express-anomaly').value;
+            const note = document.getElementById('express-note-input').value.trim();
+            const feedContainer = document.getElementById('app-screen-feed');
+
+            const newCard = document.createElement('div');
+            newCard.className = "bg-white dark:bg-slate-800 p-2.5 rounded-xl border-l-4 border-l-teal-500 border border-slate-200 dark:border-slate-700 shadow-sm text-xs space-y-1";
+            newCard.innerHTML = `
+                <div class="flex justify-between font-bold text-teal-600 dark:text-teal-400 text-[11px]">
+                    <span><i class="fa-solid fa-user-check mr-1"></i> ${zone}</span>
+                    <span class="text-slate-400 text-[9px]">Justo ahora</span>
+                </div>
+                <p class="text-[10px] text-slate-600 dark:text-slate-300"><strong>Reporte ciudadano:</strong> ${anomaly}${note ? ' — ' + note : ''}.</p>
+                <div class="text-[9px] text-slate-400 flex justify-between pt-1 border-t border-slate-100 dark:border-slate-700">
+                    <span>Enviado desde App v2.0</span>
+                    <span class="text-teal-600 dark:text-teal-400">En validación</span>
+                </div>
+            `;
+            feedContainer.insertBefore(newCard, feedContainer.children[1]);
+            document.getElementById('express-note-input').value = '';
+            switchAppTab('feed');
+        }
+
+        // Hardware diagram interactive inspector
+        function highlightPart(part) {
+            const parts = {
+                antenna: {
+                    title: "1. Antena de Telemetría 4G / LoRaWAN",
+                    desc: "Envía lecturas cada 2 minutos a la nube usando protocolos de bajo consumo energético, logrando cobertura incluso en presas o ríos alejados."
+                },
+                solar: {
+                    title: "2. Panel Solar Monocristalino",
+                    desc: "Capta energía solar durante el día para alimentar los sensores y recargar la batería interna, garantizando hasta 7 días continuos en días nublados o de noche."
+                },
+                body: {
+                    title: "3. Cuerpo Flotante Estanco IP68",
+                    desc: "Carcasa de polímero ecológico sellada herméticamente contra agua, sol y golpes. Alberga el microcontrolador y la batería LiFePO4."
+                },
+                sensors: {
+                    title: "4. Multisonda Sumergida (pH, Turbidez, DO)",
+                    desc: "Sensores calibrados de bajo costo sumergidos a profundidad constante para medir acidez, partículas suspendidas y oxígeno disuelto en tiempo real."
+                }
+            };
+            const selected = parts[part];
+            if (selected) {
+                document.getElementById('hw-part-title').innerHTML = `<i class="fa-solid fa-microchip mr-2"></i> ${selected.title}`;
+                document.getElementById('hw-part-desc').textContent = selected.desc;
+            }
+        }
+
+        // Community Feedback Form handler
+        function handleFeedbackSubmit(event) {
+            event.preventDefault();
+            const statusMsg = document.getElementById('feedback-status-msg');
+            statusMsg.textContent = "¡Gracias! Tu retroalimentación se ha registrado correctamente en la evaluación del Prototipo v2.0.";
+            statusMsg.classList.remove('hidden');
+            event.target.reset();
+        }
+
+        // Light / Dark Mode toggle
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body>
+</html>
